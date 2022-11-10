@@ -12,8 +12,11 @@
 
 class graph {
 public:
+    // TODO: const std::string&
     graph(std::string input_path);
     void parse();
+
+    // TODO: const std::vector<int>&
     std::vector<int> get_adjncy();
     std::vector<int> get_adjp();
     std::vector<int> get_adjwgt();

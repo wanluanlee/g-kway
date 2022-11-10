@@ -64,6 +64,8 @@ int main(int argc, char** argv) {
   int max_degree = mygraph.get_max_degree();
   printf("num vertex %d \n", num_vertex);
   printf("num edge %d \n", num_edge);
+
+  // TODO: const std::vector<int>& v_adjp = ...
   std::vector<int> v_adjp = mygraph.get_adjp();
   std::vector<int> v_vwgt = mygraph.get_vwgt();
   std::vector<int> v_adjncy = mygraph.get_adjncy();
@@ -72,6 +74,8 @@ int main(int argc, char** argv) {
   check_cuda(cudaMallocManaged(&vwgt, sizeof(int) * num_vertex));
   check_cuda(cudaMallocManaged(&adjncy, sizeof(int) * num_edge * 2));
   check_cuda(cudaMallocManaged(&adjwgt, sizeof(int) * num_edge * 2));
+
+  // TODO: use cudaMemcpy instead of one-by-one assignment
   for(int i = 0; i < num_vertex; ++i) {
     adjp[i] = v_adjp.at(i); 
     vwgt[i] = v_vwgt.at(i); 

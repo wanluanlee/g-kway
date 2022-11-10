@@ -4,10 +4,13 @@
 
 #include "graph.hpp"
 
-graph::graph(std::string input_path) {
-    _input_path = input_path;
+// TODO: understand what the difference is between this and yours
+// in-place construction
+graph::graph(std::string input_path) : 
+  _input_path {input_path} {
 }
 
+// TODO: tabe size = 2
 void graph::parse() {
     std::ifstream file(_input_path);
     std::string line;
@@ -29,10 +32,12 @@ void graph::parse() {
                 _adjwgt.resize(2 * _num_edge, 0);
             }
             else {
-                    int degree_count = 0;
+                int degree_count = 0;
                 while (ss >> word) {
                    // std::cout << "word: " << word << std::endl;
                      degree_count++;
+
+                    // TODO: _adjncy[adjncy_count] vs _adjncy.at(adjncy_count)
                     _adjncy.at(adjncy_count) = std::stoi(word);
                     _adjwgt.at(adjncy_count) = 1;
                     adjncy_count++;
