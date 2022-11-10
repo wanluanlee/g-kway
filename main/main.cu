@@ -14,20 +14,21 @@ cudaError_t check_cuda(cudaError_t result)
 }
 
 __global__ void matching_candidate_discovery(int* adjncy, int* adjp, int num_vertex) {
-  extern __shared__ int sadj[];
+  const int ADJP_SIZE = 1024 * sizeof(int);
+  __shared__ int sdjp[ADJP_SIZE];
+  extern __shared__ int sdjncy[];
   int tid = threadIdx.x;
   int i = blockIdx.x * blockDim.x + threadIdx.x;
-  //use binary search over adjp to find source vertex for an edge
-  if(i < num_vertex) {
-    int num_neighbor = adjp[i+1] - adjp[i];
-    int start = adjp[i];
-    printf("tid is %d, i is %d\n", tid, i);
-    printf("tid is %d, i is %d, adjp is %d \n", tid, i, adjp[i]);
-    for(int i = 0; i < num_neighbor; ++i) {
-      sadj[start+i] = adjncy[start+i];
-    }
-  }
+  //fectch 32 corresponding adjp into sdjp
+   sdjp[i] = adjp[i];
   __syncthreads();
+  //fetch 32 vertice's adjanct list
+  int num_vertices = adjp[i - 1] - adjp[i];
+  int start = adjp[i];
+  for(int i = 0; i < num_vertices; ++i) {
+    sdjncy[i+start] = adjncy[i+start];
+  }
+  //use binary search over adjp to find source vertex for an edge
 }
 
 void prefiex_sum(int* in_data, int* out_data, int size) {
@@ -39,12 +40,10 @@ void match(int num_vertex, int num_edge, int* adjncy, int* adjp, int max_degree)
   //int* match;
   //int* cmap;
 
-  //check_cuda(cudaMallocManaged(&match, sizeof(int) * num_vertex));
-  //check_cuda(cudaMallocManaged(&cmap, sizeof(int) * num_vertex));
-  int threadsPerBlock = 32;
+  int threadsPerBlock = 1024;
   int numBlocks = (num_vertex + threadsPerBlock - 1)/ threadsPerBlock;
   //calculate neighbor list length using prefix sum; assume num_vertex > 32
-  int share_memory_size = threadsPerBlock * max_degree * sizeof(int);
+  int share_memory_size = threadsPerBlock * sizeof(int);
   matching_candidate_discovery <<< numBlocks, threadsPerBlock, share_memory_size >>> (adjncy, adjp, num_vertex);
   //fectch the neighbor lists of 32 vertices
   cudaDeviceSynchronize();
@@ -63,6 +62,8 @@ int main(int argc, char** argv) {
   int num_vertex = mygraph.get_num_vertex();
   int num_edge = mygraph.get_num_edge();    
   int max_degree = mygraph.get_max_degree();
+  printf("num vertex %d \n", num_vertex);
+  printf("num edge %d \n", num_edge);
   std::vector<int> v_adjp = mygraph.get_adjp();
   std::vector<int> v_vwgt = mygraph.get_vwgt();
   std::vector<int> v_adjncy = mygraph.get_adjncy();
@@ -79,12 +80,9 @@ int main(int argc, char** argv) {
     adjncy[i] = v_adjncy.at(i); 
     adjwgt[i] = v_adjwgt.at(i); 
   }
-  //adjp = mygraph.get_adjp().data();    
-  //vwgt = mygraph.get_vwgt().data();    
-  //adjncy = mygraph.get_adjncy().data();    
-  //adjwgt = mygraph.get_adjwgt().data();
   printf("max degree %d \n",max_degree);
   match(num_vertex, num_edge, adjncy, adjp, max_degree);
+  printf("after match \n");
   cudaFree(adjp); 
   cudaFree(vwgt); 
   cudaFree(adjncy); 

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libgkway.a CMakeFiles/gkway.dir/graph.cpp.o
+/usr/bin/ranlib libgkway.a
