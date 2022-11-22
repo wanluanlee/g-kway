@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # test that filesystem header actually is there and works
 
-add_executable(g-kway main/main.cu gkway/graph.cpp gkway/graph.hpp)
+add_executable(g-kway main/main.cu)
 set_target_properties(g-kway PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/exec")
 #------------------------------------------------------------------------------
 # default release build
@@ -75,7 +75,6 @@ include(CTest)
 # -----------------------------------------------------------------------------
 
 # add sub directories
-add_subdirectory(gkway)
 add_subdirectory(main)
 #add_subdirectory(unittests)
 

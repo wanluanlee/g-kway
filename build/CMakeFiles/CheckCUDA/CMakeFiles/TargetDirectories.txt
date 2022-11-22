@@ -1,2 +1,0 @@
-/home/wanluanlee/Documents/G-kway/build/CMakeFiles/CheckCUDA/CMakeFiles/rebuild_cache.dir
-/home/wanluanlee/Documents/G-kway/build/CMakeFiles/CheckCUDA/CMakeFiles/edit_cache.dir

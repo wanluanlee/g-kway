@@ -1,3 +1,0 @@
-/home/wanluanlee/Documents/G-kway/cmake-build-debug/CMakeFiles/G_kway.dir
-/home/wanluanlee/Documents/G-kway/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/wanluanlee/Documents/G-kway/cmake-build-debug/CMakeFiles/rebuild_cache.dir
