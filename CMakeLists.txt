@@ -4,6 +4,7 @@ project(G-KWAY VERSION 1.0)
 
 # set everything up for c++ 17 features
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CUDA_ARCHITECTURES 75)
 
 # test that filesystem header actually is there and works
 
@@ -60,6 +61,7 @@ if(TF_BUILD_CUDA)
     message(FATAL_ERROR "\nTaskflow requires CUDA at least v11")
   endif()
 endif()  
+
 message("PROJECT_NAME:" ${PROJECT_NAME})
 message("PROJECT_SOURCE_DIR:" ${PROJECT_SOURCE_DIR})
 message("CMAKE_BUILD_TYPE:" ${CMAKE_BUILD_TYPE})

@@ -1,65 +1,78 @@
+#pragma once
+
+#include "../declarations.h"
+
+namespace gk { // begin of namespace gk ============================================
+
+// ======================================================
 //
-// Created by Wan Luan Lee on 11/8/22.
+// Declaration of Graph
 //
+// This class is used to grap graph information.
+//
+// ======================================================
 
-#ifndef G_KWAY_GRAPH_HPP
-#define G_KWAY_GRAPH_HPP
-#include <string>
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <sstream>
+class Graph {
 
-class graph {
-public:
-    // TODO: const std::string&
-    graph(const std::string& input_path);
-    ~graph();
-    void parse();
+  public:
 
-    // TODO: std::vector<int>&
-    std::vector<int>& get_adjncy();
-    std::vector<int>& get_adjncy_source();
-    std::vector<int>& get_adjp();
-    std::vector<int>& get_adjwgt();
-    std::vector<int>& get_vwgt();
-    size_t get_num_vertex();
-    size_t get_num_edge();
-    int get_max_degree();
-    void allocate_gpu_memory();
-    //int* get_d_adjncy();
-    //int* get_d_adjp();
-    //int* get_d_adjwgt();
-    //int* get_d_vwgt();
+      // TODO: const std::string&
+      Graph(const std::string& input_path);
+      ~Graph();
 
-private:
-    size_t _num_vertex = 0;
-    size_t _num_edge = 0;
-    int _max_degree = 0;
-    std::string _input_path;
-    std::vector<int> _adjncy; //adjacency list
-    std::vector<int> _adjp; //adjacency pointer
-    std::vector<int> _adjwgt; //edge weight
-    std::vector<int> _vwgt; //vertx weight
-    std::vector<int> _adjncy_source;
+      // TODO: std::vector<int>&
+      const int* get_adjncy();
+      const int* get_adjncy_source();
+      const int* get_adjp();
+      const int* get_adjwgt();
+      const int* get_vwgt();
+      size_t get_num_vertex();
+      size_t get_num_edge();
+      void allocate_gpu_memory();
+      //int* get_d_adjncy();
+      //int* get_d_adjp();
+      //int* get_d_adjwgt();
+      //int* get_d_vwgt();
+
+  private:
+
+      void _parse();
+
+      size_t _num_vertex = 0;
+      size_t _num_edge = 0;
+      std::string _input_path;
+      std::vector<int> _adjncy; //adjacency list
+      std::vector<int> _adjp; //adjacency pointer
+      std::vector<int> _adjwgt; //edge weight
+      std::vector<int> _vwgt; //vertx weight
+      std::vector<int> _adjncy_source;
 };
+
+// ======================================================
+//
+// Definition of Graph
+//
+// ======================================================
 
 // TODO: understand what the difference is between this and yours
 // in-place construction
-graph::graph(const std::string& input_path) : 
+Graph::Graph(const std::string& input_path) : 
   _input_path {input_path} {
+   _parse();
 }
 
-graph::~graph() {
+Graph::~Graph() {
 }
 
 // TODO: tabe size = 2
-void graph::parse() {
+void Graph::_parse() {
   std::ifstream file(_input_path);
   std::string line;
   int line_number = 0;
   int adjncy_count = 0;
   int vertex_count = 1;
+  int format_count = 0;
+  int if_weighted_edge = false;
   if(file.is_open()) {
     //std::cout << "file open " << std::endl;
     while (std::getline(file,line)) {
@@ -67,30 +80,64 @@ void graph::parse() {
       std::istringstream ss(line);
       std::string word;
       if(line_number == 0) {
-        ss >> _num_vertex;
-        ss >> _num_edge;
+        while(ss >> word) {
+          if(format_count == 0) {
+           _num_vertex = std::stoi(word); 
+          }
+          else if(format_count == 1) {
+           _num_edge = std::stoi(word); 
+          }
+          else if(format_count == 2) {
+           if(word == "1") {
+             printf("weighted graph \n");
+             if_weighted_edge = true;
+           }
+          }
+          format_count++;
+        }
+        printf("number of vertex %d \n", _num_vertex);
+        printf("number of edge %d \n", _num_edge);
+        //ss >> _num_vertex;
+        //ss >> _num_edge;
         _adjp.resize(_num_vertex + 1, 0);
-        _vwgt.resize(_num_vertex, 0);
+        _vwgt.resize(_num_vertex, 1);
         _adjncy.resize(2 * _num_edge, 0);
         _adjncy_source.resize(2 * _num_edge, 0);
         _adjwgt.resize(2 * _num_edge, 0);
       }
       else {
-        int degree_count = 0;
+        int token_count = 0;
         while (ss >> word) {
-         // std::cout << "word: " << word << std::endl;
-          degree_count++;
-          // TODO: _adjncy[adjncy_count] vs _adjncy.at(adjncy_count)
-          _adjncy[adjncy_count] = std::stoi(word);
-          _adjncy_source[adjncy_count] = line_number - 1;
-          //printf("_adjncy_source at i %d, is %d \n",adjncy_count, _adjncy_source[adjncy_count]);
-          _adjwgt[adjncy_count] = 1;
-          adjncy_count++;
+          if(if_weighted_edge == false) {
+            // TODO: _adjncy[adjncy_count] vs _adjncy.at(adjncy_count)
+            _adjncy[adjncy_count] = std::stoi(word);
+            _adjncy_source[adjncy_count] = line_number - 1;
+            _adjwgt[adjncy_count] = 1;
+            adjncy_count++;
+          }
+           /*
+           * If the Graph's edges have weightes, each line will have the following format
+           * v1 e1 v2 e2 ...
+           * Where v1 is the first connected vertex and e1 is the edge weight betwwen v1 and source vertex
+           * */
+          else {
+            if(token_count %2 == 0) {
+            //std::cout << "count: " << token_count << ", word: " << word << "\n";
+              _adjncy[adjncy_count] = std::stoi(word);
+              _adjncy_source[adjncy_count] = line_number - 1;
+              //printf("adjncy at %d is %d \n", adjncy_count, _adjncy[adjncy_count]);
+            }
+            else {
+              _adjwgt[adjncy_count] = std::stoi(word);
+              adjncy_count++;
+            }
+            token_count++;
+          }
         }
-        if(_max_degree < degree_count) {_max_degree = degree_count;}
         if(vertex_count < _num_vertex) {
           _adjp[vertex_count] = adjncy_count;
-          _adjwgt[vertex_count] = 1;
+          //_vwgt[vertex_count] = 1;
+          //_adjwgt[vertex_count] = 1;
           vertex_count++;
         }
       }
@@ -99,38 +146,47 @@ void graph::parse() {
   }
   file.close();
   _adjp[_adjp.size() - 1] = adjncy_count;
+  //for(auto i : _adjwgt) {
+    //printf("_adjwgt is %d \n", i);
+  //}
+  //for(auto i : _vwgt) {
+    //printf("_vwgt is %d \n", i);
+  //}
+  //for(auto i : _adjncy) {
+    //printf("_adjncy is %d \n", i);
+  //}
+  //for(auto i : _adjncy_source) {
+    //printf("_adjncy_source is %d \n", i);
+  //}
 }
 
-std::vector<int>& graph::get_adjncy() {
-  return _adjncy;
+const int* Graph::get_adjncy() {
+  return _adjncy.data();
 }
 
-std::vector<int>& graph::get_adjncy_source() {
-  return _adjncy_source;
+const int* Graph::get_adjncy_source() {
+  return _adjncy_source.data();
 }
 
-std::vector<int>& graph::get_adjp() {
-  return _adjp;
+const int* Graph::get_adjp() {
+  return _adjp.data();
 }
 
-std::vector<int>& graph::get_adjwgt() {
-  return _adjwgt;
+const int* Graph::get_adjwgt() {
+  return _adjwgt.data();
 }
 
-std::vector<int>& graph::get_vwgt() {
-  return _vwgt;
+const int* Graph::get_vwgt() {
+  return _vwgt.data();
 }
 
-size_t graph::get_num_vertex() {
+size_t Graph::get_num_vertex() {
   return _num_vertex;
 }
 
-size_t graph::get_num_edge() {
+size_t Graph::get_num_edge() {
   return _num_edge;
 }
 
-int graph::get_max_degree() {
-  return _max_degree;
-}
 
-#endif //G_KWAY_GRAPH_HPP
+} // end of namespace gk ==========================================
